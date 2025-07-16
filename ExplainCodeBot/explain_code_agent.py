@@ -2,7 +2,7 @@ from google.adk import Agent
 from google.adk.tools import google_search
 from google.adk.agents import SequentialAgent
 
-search_agent = Agent( 
+expain_code_agent = Agent( 
     model = "gemini-2.0-flash", 
     name = "search_agent" , 
     instruction = "You are a helpful assistant that explains code in simple language.hen given code, break it down step by step, describe what it does,give tips on how to improve or rewrite it.", 
@@ -19,7 +19,7 @@ learn_agent = Agent(
 
 Sequentia_processing_stage = SequentialAgent( 
     name="Sequentia_processing", 
-    sub_agents=[search_agent, learn_agent], 
+    sub_agents=[expain_code_agent, learn_agent], 
     description="Process files and text separately, save outputs.",
     )
 
