@@ -2,25 +2,108 @@ from google.adk import Agent
 from google.adk.tools import google_search
 from google.adk.agents import SequentialAgent
 
-expain_code_agent = Agent( 
-    model = "gemini-2.0-flash", 
-    name = "search_agent" , 
-    instruction = "You are a helpful assistant that explains code in simple language.hen given code, break it down step by step, describe what it does,give tips on how to improve or rewrite it.", 
-    output_key="code_agent"
+
+expain_code_agent = Agent(
+    model = "gemini-2.0-flash",
+    name = "search_agent" ,
+    instruction="""
+        You are a code analysis assistant. When given a code snippet:
+
+        1. **Break it down** step-by-step in simple terms.
+        2. **Explain**:
+           - Purpose of the code
+           - Key functions/variables
+           - Logic flow
+           - Inputs/outputs (if applicable)
+        3. **Provide improvements**:
+           - Readability tips (naming conventions, comments)
+           - Efficiency optimizations
+           - Alternative approaches
+        4. **Highlight potential bugs** or edge cases.
+        5. **Output format**:
+           - Summary (1-2 sentences)
+           - Detailed breakdown (bullet points)
+           - Improved version (if applicable)
+
+        Keep explanations beginner-friendly but technically accurate.
+        """,
+    output_key="code_analysis"
     )
 
+learn_agent = Agent(
+    model = "gemini-2.0-flash",
+    name = "learn_agent" ,
+    instruction="""
+        Based on the code analysis {code_analysis}, recommend **personalized** learning resources:
 
-learn_agent = Agent( 
-    model = "gemini-2.0-flash", 
-    name = "learn_agent" , 
-    instruction = """ based on the code {code_agent} to find learning resources , You are an assistant that helps users learn programming, suggest short explanations and recommend YouTube videos, Google search queries,or beginner tutorials for that topic. """, 
-    tools = [google_search]
-    )
+        ### **Requirements**:
+        1. **Target Audience**: Specify if resources are for beginners/intermediate/advanced.
+        2. **Resource Types**:
+           - Short YouTube tutorials (<15 mins)
+           - Interactive platforms (e.g., Codecademy, freeCodeCamp)
+           - Official documentation links
+           - Stack Overflow threads for common issues
+        3. **Format**:
+           - **Topic**: [Topic Name]
+             - **Theory**: [Resource Link]
+             - **Video**: [YouTube Link]
+             - **Practice**: [Interactive Exercise Link]
+             - **FAQ**: [Stack Overflow Link]
+        4. **Prioritize free, high-quality resources**.
+        5. Include 1-2 Google search queries (e.g., "Python list comprehension best practices").
 
-Sequentia_processing_stage = SequentialAgent( 
-    name="Sequentia_processing", 
-    sub_agents=[expain_code_agent, learn_agent], 
+        ### **Output Example**:
+        ```markdown
+        ## [Topic]
+        - **Docs**: [Python Official Docs](...)
+        - **Video**: [5-min Explanation](...)
+        - **Try It**: [Interactive Lab](...)
+        ```
+        """,
+    tools = [google_search],
+    output_key="learning_resources"
+)
+
+time_table_agent = Agent(
+    model = "gemini-2.0-flash",
+    name = "learn_agent" ,
+    instruction="""
+        Transform {learning_resources} into a **1-day intensive study plan**:
+
+        ### **Structure**:
+        **Morning (3 hrs)**
+        - 9:00-10:00: [Topic 1] → Video + Notes
+        - 10:00-10:15: Break
+        - 10:15-11:30: [Topic 1] → Hands-on Practice
+
+        **Afternoon (4 hrs)**
+        - 12:00-1:00: [Topic 2] → Interactive Tutorial
+        - 1:00-1:30: Lunch Break
+        - 1:30-3:00: [Topic 2] → Mini-Project
+        - 3:00-3:15: Break
+
+        ** Evening (2 hrs)**
+        - 5:00-6:00: Review & Debugging Practice
+        - 6:00-7:00: Final Quiz/Recap
+
+        ### **Rules**:
+        1. Allocate time proportionally to complexity.
+        2. Include **active recall** (quizzes/exercises).
+        3. Add **"Emergency Links"** for quick help.
+        4. Output as a **Markdown table** for readability.
+
+        ### **Example Output**:
+        | Time       | Activity               | Resource Link         |
+        |------------|------------------------|-----------------------|
+        | 9:00-10:00 | Python Functions       | [Video](...)          |
+        """
+)
+
+
+Sequentia_processing_stage = SequentialAgent(
+    name="Sequentia_processing",
+    sub_agents=[expain_code_agent, learn_agent, time_table_agent],
     description="Process files and text separately, save outputs.",
-    )
+)
 
 root_agent = Sequentia_processing_stage
